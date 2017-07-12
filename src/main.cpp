@@ -8,7 +8,7 @@
 int main(int argc, char **argv)
 {
 
-    int rate = 10;
+    int rate = 0.001;
 
     ros::init(argc, argv, "mavros_takeoff");
     ros::NodeHandle n;
@@ -18,7 +18,7 @@ int main(int argc, char **argv)
     ////////////////////////////////////////////
     /////////////////GUIDED/////////////////////
     ////////////////////////////////////////////
-    ros::ServiceClient cl = n.serviceClient<mavros_msgs::SetMode>("/mavros/set_mode");
+    ros::ServiceClient cl = n.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
     mavros_msgs::SetMode srv_setMode;
     srv_setMode.request.base_mode = 0;
     srv_setMode.request.custom_mode = "GUIDED";
@@ -28,15 +28,24 @@ int main(int argc, char **argv)
         ROS_ERROR("Failed SetMode");
         return -1;
     }
-
+    
+    for (int i(0); i<10; i++ ){
+	ROS_INFO("%d ", i);
+	sleep(1);
+    }
     ////////////////////////////////////////////
     ///////////////////ARM//////////////////////
     ////////////////////////////////////////////
-    ros::ServiceClient arming_cl = n.serviceClient<mavros_msgs::CommandBool>("/mavros/cmd/arming");
+    
+    ros::ServiceClient arming_cl = n.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
     mavros_msgs::CommandBool srv;
     srv.request.value = true;
     if(arming_cl.call(srv)){
         ROS_ERROR("ARM send ok %d", srv.response.success);
+	while (srv.response.success==0){
+	srv.request.value = true;
+	ROS_ERROR("ARM send ok %d", srv.response.success);
+	}
     }else{
         ROS_ERROR("Failed arming or disarming");
     }
@@ -44,7 +53,7 @@ int main(int argc, char **argv)
     ////////////////////////////////////////////
     /////////////////TAKEOFF////////////////////
     ////////////////////////////////////////////
-    ros::ServiceClient takeoff_cl = n.serviceClient<mavros_msgs::CommandTOL>("/mavros/cmd/takeoff");
+    ros::ServiceClient takeoff_cl = n.serviceClient<mavros_msgs::CommandTOL>("mavros/cmd/takeoff");
     mavros_msgs::CommandTOL srv_takeoff;
     srv_takeoff.request.altitude = 10;
     srv_takeoff.request.latitude = 0;
@@ -57,15 +66,16 @@ int main(int argc, char **argv)
         ROS_ERROR("Failed Takeoff");
     }
 
+
     ////////////////////////////////////////////
     /////////////////DO STUFF///////////////////
     ////////////////////////////////////////////
-    sleep(10);
-
+    sleep(120);
+/*
     ////////////////////////////////////////////
     ///////////////////LAND/////////////////////
     ////////////////////////////////////////////
-    ros::ServiceClient land_cl = n.serviceClient<mavros_msgs::CommandTOL>("/mavros/cmd/land");
+    ros::ServiceClient land_cl = n.serviceClient<mavros_msgs::CommandTOL>("mavros/cmd/land");
     mavros_msgs::CommandTOL srv_land;
     srv_land.request.altitude = 10;
     srv_land.request.latitude = 0;
@@ -77,7 +87,7 @@ int main(int argc, char **argv)
     }else{
         ROS_ERROR("Failed Land");
     }
-
+*/
     while (n.ok())
     {
       ros::spinOnce();
